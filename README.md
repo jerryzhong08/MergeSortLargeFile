@@ -32,8 +32,12 @@ The sorting steps are:
 
 1. Locate the file to be sorted from MergeSortLargeFile/data/input.
 2. Load the file by chunks so that the size of each chunk is less than the available application memory.
-3. Sort each chuck in ascending order and write the result to temporary file in MergeSortLargeFile/data/temp.
-4. Load one line at a time from the sorted temporary file into priority queue and pop up the top element into one final sorted file.
+3. Sort each chuck in ascending order and write the result to a temporary file in MergeSortLargeFile/data/temp.
+4. Load one line from each of the sorted temporary files into a priority queue, where the smallest line stays at the top.
+5. Pop up the top element of the queue and write to the final sorted file.
+6. Read the next line from the temporary file where the popped line is read and add it to the queue, which heapifies the queue and puts the new smallest line at the top.
+7. When all lines of one temporary file have been read, skip it and pop up the queue top and write to the final sorted file.
+8. Repeat steps 5 to 7 until the queue becomes empty.
 
 To run the program,
 ```sh
@@ -42,12 +46,14 @@ cd MergeSortLargeFile/sort_file
 ```
 The command line argument indicates the corresponding generated file to sort.
 
-The sorted file is saved to MergeSortLargeFile/data/output.
+The sorted temparory file are saved to MergeSortLargeFile/data/temp.
+
+The final sorted file is saved to MergeSortLargeFile/data/output.
 
 ## 1.3. Test sorting result
 The testing will check:
 
-1. The original file and sorted file contains the same number of lines.
+1. The original file and sorted file contain the same number of lines.
 2. All lines from the original file are present in the sorted file.
 3. All lines in the sorted files appear in ascending order.
 
@@ -67,21 +73,33 @@ The programs are developed on macOS Monterey Version 12.1.
 
 The IDE is VSCode 1.62.3, with C/C++ Extension v1.7.1. The C++ version is C++17.
 
+For each of the executable apps (i.e. main() is defined) from 
+
+- MergeSortLargeFile/generate_file
+- MergeSortLargeFile/sort_file
+- MergeSortLargeFile/test_file_sort
+
+Load it to the VSCode workspace, use Terminal -> Run Build Task to compile it, and use Run -> Start Debugging  or Run Without Debugging to run it.
+
+In sub-folder .vscode, tasks.json defines the compile environment, launch.json defines the execution environment, and c_cpp_properties.json defines the IDE C/C++ environment including the built-in syntax validation.
+
 ## 2.2. The FileLine class
-The FileLine class is defined to hold three meta data of each line from the file:
+The FileLine class is defined to hold three meta data of each line read from the file:
 
-1. The line number extracted from the line.
-2. The key - number of seconds from the Epoch as represented by the time stamp extracted from the line.
-3. The file index - index of the chunck file the line is read from.
+- `lineNumber` - the line number extracted from the line.
+- `key` - number of seconds from the Epoch as represented by the time stamp extracted from the line.
+- `fileIndex` - index of the temporary file the line is read from.
 
-The criteria for sorting is:
+## 2.3. Sort in ascending order
+The line is sorted first by `key`, and then by `lineNumber`:
 ```js
 auto compareFileLine = [](const std::shared_ptr<FileLine>& a, const std::shared_ptr<FileLine>& b) {
     return a->key() != b->key() ? a->key() < b->key() : a->lineNumber() < b->lineNumber();
 };
 ```
+Since the lines are written to the file strictly by the order of line number, the sort is considered stable.
 
-## 2.3. K-way merge
-To merge the K sorted files, a C++/STL priority_queue is used. Since the priority_queue always puts the smallest line (by the above criteria) on the top, it takes O(1) to output it to the merged file.
+## 2.4. K-way merge
+To merge the K sorted files, a C++/STL `std::priority_queue`, instead of plain `std::vector`, is used to hold one line from each of the K temporary files. Since `std::priority_queue` always puts the smallest line (by the above criteria) on the top, it takes O(1) to pop it to the final merged file, the same as with `std::vector`.
 
-New line inserted to the back of the priority_queue will trigger the heapify process to put the newly smallest line on the top again. The heapify takes O(logN).
+However, when a new line is inserted to the back, `std::priority_queue` triggers the heapify process that takes `O(logN)` to put the new smallest line on the top. Compared with that, `std::vector` takes `O(N)` to find the new smallest line.
