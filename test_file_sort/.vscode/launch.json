@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+    
+        {
+            "name": "C++ Launch test_file_sort",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/test_file_sort",
+            "preLaunchTask": "Build test_file_sort in clang++",
+            "internalConsoleOptions": "openOnSessionStart",
+            "logging": {
+                "moduleLoad": false,
+                "programOutput": true,
+                "trace": false
+            },
+            "showDisplayString": false,
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "externalConsole": true, // set true to enable keyboard input
+            "osx": {
+                "MIMode": "lldb"
+            }
+        }
+    ]
+}
