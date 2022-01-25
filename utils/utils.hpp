@@ -24,7 +24,7 @@ const char* timeInt2Str(int secondsSinceEpoch);
 
 tm timeStr2Tm(const char* timeStr);
 
-class FileLine {
+class FileLine final {
     std::string _content;
     int _lineNumber;
     time_t _key;
@@ -47,7 +47,6 @@ public:
         this->swap(temp);
         return *this;
     }
-    virtual ~FileLine() {}
 
     void swap(FileLine& line) {
         std::swap(this->_content, line._content);
